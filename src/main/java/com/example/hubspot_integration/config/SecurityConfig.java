@@ -18,8 +18,8 @@ public class SecurityConfig {
                 .requestMatchers("/oauth/**", "/contacts/**", "/webhook/**", "/h2-console/**").permitAll()
                 .anyRequest().permitAll()
             )
-            .oauth2Login(oauth -> oauth.disable()) // ✅ desativa login interativo
-            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // habilita o console do H2
+            .oauth2Login(oauth -> oauth.disable())
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
     
         return http.build();
     }

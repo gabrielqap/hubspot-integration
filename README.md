@@ -1,7 +1,7 @@
 # HubSpot Integration API
 
-A Java Spring Boot REST API for integrating with HubSpot CRM using OAuth 2.0 (Authorization Code Flow).  
-The project includes endpoints for contact creation, webhook handling (with HMAC validation), and asynchronous processing using RabbitMQ.
+A Java Spring Boot REST API to integrate with HubSpot CRM using OAuth 2.0 Authorization Code Flow.  
+Supports contact creation, full contact sync, and webhook handling with HMAC validation.
 
 ## Technologies Used
 
@@ -11,16 +11,23 @@ The project includes endpoints for contact creation, webhook handling (with HMAC
 - Spring Security (OAuth2 Client)
 - Spring Data JPA
 - H2 Database (in-memory)
-- RabbitMQ (via Spring AMQP)
 - Docker & Docker Compose
 
 ## Features
 
-- OAuth 2.0 Authorization Code Flow integration with HubSpot
+**HubSpot Integration**
+- OAuth 2.0 Authorization Code Flow integration
+- Automatically fetches and stores all contacts after successful OAuth
 - Contact creation via HubSpot API
+- Full contact synchronization from HubSpot to local database
+
+**Webhook Handling**
 - Webhook listener for `contact.creation` events
-- HMAC SHA256 validation of webhook signatures
-- Asynchronous message processing with RabbitMQ
+- Automatically fetches full contact data upon webhook reception
+- HMAC SHA256 validation for webhook security
+
+**Tech Stack**
+- Spring Boot backend with H2 in-memory database
 - Full containerized setup with Docker
 
 ## How to Run (Docker)
@@ -38,43 +45,41 @@ The project includes endpoints for contact creation, webhook handling (with HMAC
    hubspot.client-secret=YOUR_CLIENT_SECRET  
    hubspot.redirect-uri=http://localhost:8080/oauth/callback
 
-3. Start the application and RabbitMQ with Docker Compose
+3. Start the application using Docker Compose:
 
    docker-compose up --build
 
-   - The application will be available at: http://localhost:8080  
-   - RabbitMQ management panel: http://localhost:15672 (user: guest, password: guest)  
-   - H2 console: http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:testdb)
+   The API will be accessible at: http://localhost:8080
 
 ## API Endpoints
 
 ### Authorization
 
-- GET /oauth/authorize  
-  Returns the HubSpot authorization URL
+- `GET /oauth/authorize`  
+  Returns the HubSpot authorization URL.
 
-- GET /oauth/callback?code=...  
-  Exchanges the authorization code for an access token
+- `GET /oauth/callback?code=...`  
+  Exchanges the authorization code for an access token.  
+  Then verifies and syncs all HubSpot contacts to the local database.
 
 ### Contacts
 
-- POST /contacts  
-  Creates a contact on HubSpot using the access token
+- `POST /contacts`  
+  Creates a contact on HubSpot using the access token.
+
+- `GET /contacts`  
+  Returns all contacts stored in the local database.
 
 ### Webhook
 
-- POST /webhook/contact-created  
-  Endpoint that receives HubSpot `contact.creation` webhook events  
-  Validates signature using HMAC SHA256  
-  Publishes events to RabbitMQ
-
-## Queue
-
-- Queue name: webhook.events  
-- RabbitMQ is used to asynchronously process contact creation events
-
+- `POST /webhook/contact-created`  
+  Handles `contact.creation` webhook events from HubSpot.  
+  Validates the request signature using HMAC SHA256.  
+  Fetches the full contact from the API and stores it locally.
+  
 ## Notes
 
-- This project uses an in-memory H2 database for simplicity  
-- Tokens are stored in memory (you can extend it to persist in the database)  
-- You can test the webhook by exposing your local server using `ngrok`
+- This project uses an in-memory H2 database for simplicity.
+- OAuth access tokens are stored in memory (not persisted).
+- You can test the webhook locally by exposing your server using `ngrok`.
+- Remember to configure the webhook in your HubSpot app to send `contact.creation` events to the `ngrok` URL (e.g. `https://abc123.ngrok.io/webhook/contact-created`).
