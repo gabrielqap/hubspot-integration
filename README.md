@@ -62,6 +62,8 @@ Supports contact creation, full contact sync, and webhook handling with HMAC val
   Exchanges the authorization code for an access token.  
   Then verifies and syncs all HubSpot contacts to the local database.
 
+The routes below are only available after authorizing the integration and obtaining the access token.
+
 ### Contacts
 
 - `POST /contacts`  
