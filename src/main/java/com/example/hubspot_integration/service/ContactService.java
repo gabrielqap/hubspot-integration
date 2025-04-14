@@ -24,25 +24,33 @@ public class ContactService {
     @Autowired
     private HubSpotService hubSpotService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     public List<Contact> getAllContacts() {
         return contactRepository.findAll();
     }
 
     public Contact createContact(ContactDTO contactDTO) {
         String responseBody = hubSpotService.createContactInHubSpot(contactDTO);
-        Contact contact = saveContactInRepository(responseBody, contactDTO);
-        return contact;
+        return saveContactInRepository(responseBody, contactDTO);
     }
-
+    
     private Contact saveContactInRepository(String responseBody, ContactDTO dto) {
         try {
-            String hubspotId = extractHubSpotId(responseBody);
+            JsonNode root = objectMapper.readTree(responseBody);
+    
+            String hubspotId = root.get("id").asText();
             Contact contact = ContactMapper.fromDTO(dto, hubspotId);
-            contactRepository.save(contact);
-
-            contactRepository.save(contact);
-            return contact;
-
+    
+            JsonNode properties = root.get("properties");
+            if (properties != null) {
+                contact.setCreatedAt(properties.get("createdate").asText());
+                contact.setUpdatedAt(properties.get("lastmodifieddate").asText());
+            }
+    
+            return contactRepository.save(contact);
+    
         } catch (Exception e) {
             String errorMessage = String.format(
                 "Failed to save contact (Email: %s, Firstname: %s, Lastname: %s): %s", 
@@ -50,17 +58,6 @@ public class ContactService {
             );
             log.error(errorMessage, e);
             throw new RuntimeException("Failed to parse HubSpot response: " + e.getMessage(), e);
-        }
-    }
-
-    private String extractHubSpotId(String responseBody) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode root = objectMapper.readTree(responseBody);
-            return root.get("id").asText();
-        } catch (Exception e) {
-            log.error("Failed to extract HubSpot ID, Body: {}", responseBody);
-            throw new RuntimeException("Failed to extract HubSpot ID: " + e.getMessage(), e);
         }
     }
 }
