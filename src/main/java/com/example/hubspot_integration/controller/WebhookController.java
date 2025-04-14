@@ -33,7 +33,6 @@ public class WebhookController {
             @RequestBody String requestBody,
             ObjectMapper mapper
     ) {
-        System.out.println("Request body: " + requestBody);
         if (!webhookValidator.isValid(signature, requestBody)) {
             log.warn("Invalid webhook signature received: " + signature);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid signature");

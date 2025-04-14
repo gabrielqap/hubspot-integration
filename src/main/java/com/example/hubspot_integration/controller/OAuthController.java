@@ -3,6 +3,7 @@ package com.example.hubspot_integration.controller;
 import com.example.hubspot_integration.config.OAuthProperties;
 import com.example.hubspot_integration.service.OAuthService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,19 +23,23 @@ public class OAuthController {
     private OAuthProperties oauthProps;
 
     @GetMapping("/authorize")
-    public ResponseEntity<String> getAuthorizationUrl() {
-        String url = UriComponentsBuilder
-                .fromUriString(oauthProps.getAuthorizationUri())
-                .queryParam("client_id", oauthProps.getClientId())
-                .queryParam("redirect_uri", oauthProps.getRedirectUri())
-                .queryParam("scope", oauthProps.getScope())
-                .queryParam("response_type", oauthProps.getResponseType())
-                .build()
-                .toUriString();
-
-        return ResponseEntity.ok(url);
+    public void getAuthorizationUrl(HttpServletResponse response) {
+        try {
+            String url = UriComponentsBuilder
+            .fromUriString(oauthProps.getAuthorizationUri())
+            .queryParam("client_id", oauthProps.getClientId())
+            .queryParam("redirect_uri", oauthProps.getRedirectUri())
+            .queryParam("scope", oauthProps.getScope())
+            .queryParam("response_type", oauthProps.getResponseType())
+            .build()
+            .toUriString();
+            response.sendRedirect(url);
+        } catch (Exception e) {
+            log.error("Error redirecting to authorization URL: {}", e.getMessage(), e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
-
+    
     @GetMapping("/callback")
     public ResponseEntity<String> handleCallback(@RequestParam("code") String code) {
         try {

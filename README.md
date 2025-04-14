@@ -56,7 +56,7 @@ Supports contact creation, full contact sync, and webhook handling with HMAC val
 ### Authorization
 
 - `GET /oauth/authorize`  
-  Returns the HubSpot authorization URL.
+  Redirects the user to the HubSpot authorization URL.
 
 - `GET /oauth/callback?code=...`  
   Exchanges the authorization code for an access token.  

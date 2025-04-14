@@ -33,7 +33,6 @@ public class ContactSyncService {
     public void syncContacts() {
         long localCount = contactRepository.count();
         long hubspotCount = hubSpotService.getTotalContacts();
-        System.out.println("TOTAL: " + hubspotCount);
 
         if (localCount < hubspotCount) {
             log.info("Synchronizing missing contacts from HubSpot: local={}, remote={}", localCount, hubspotCount);
